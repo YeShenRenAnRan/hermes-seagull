@@ -1,3 +1,8 @@
+---
+name: seagull-game-hack
+description: 游戏辅助开发技能 — entity list→ViewMatrix→W2S 绘制链路、ESP/透视、自瞄平滑、内存读写、SDK dump、overlay 架构、trainer 骨架与反作弊面研究。
+---
+
 # Seagull Game Hack Development Skill
 
 游戏辅助开发技能：ESP/透视、自瞄、内存读写、SDK dump、trainer 架构、反作弊绕过研究。

@@ -1,222 +1,122 @@
-# GitHub 发布指南
+# 仓库维护指南
 
-## 准备工作
-
-### 1. 创建 GitHub 仓库
-
-1. 登录 GitHub: https://github.com
-2. 点击右上角 '+' -> 'New repository'
-3. 填写信息：
-   - Repository name: hermes-seagull-profile
-   - Description: Seagull Profile - CTF/Red-team AI agent personality for Hermes Agent
-   - Public/Private: 选择 Public
-   - 不要勾选 "Initialize this repository with a README"（我们已经有了）
-4. 点击 'Create repository'
-
-### 2. 获取 Personal Access Token (经典方式)
-
-1. 进入 Settings: https://github.com/settings/tokens
-2. 点击 'Generate new token' -> 'Generate new token (classic)'
-3. 填写信息：
-   - Note: Hermes Seagull Profile Upload
-   - Expiration: 选择合适的过期时间（建议90天或自定义）
-   - 勾选权限：
-     - [x] **repo** (完整仓库访问权限)
-       - [x] repo:status
-       - [x] repo_deployment
-       - [x] public_repo
-       - [x] repo:invite
-       - [x] security_events
-4. 点击底部 'Generate token'
-5. **立即复制生成的 token**（只显示一次！格式如：ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx）
-
-### 3. 配置 Git 本地身份
-
-打开 PowerShell，执行：
-
-\\\powershell
-# 配置用户名和邮箱（替换成你的 GitHub 用户名和邮箱）
-git config --global user.name "你的GitHub用户名"
-git config --global user.email "你的GitHub邮箱"
-
-# 验证配置
-git config --global user.name
-git config --global user.email
-\\\
-
-### 4. 初始化本地仓库并推送
-
-\\\powershell
-# 进入项目目录
-cd "C:\Users\Administrator\Documents\ChatGPT\破甲智能体\seagull-profile"
-
-# 初始化 Git 仓库
-git init
-
-# 添加所有文件
-git add .
-
-# 提交
-git commit -m "Initial commit: Seagull Profile for Hermes Agent"
-
-# 添加远程仓库（替换 YOUR-USERNAME 为你的 GitHub 用户名）
-git remote add origin https://github.com/YOUR-USERNAME/hermes-seagull-profile.git
-
-# 设置主分支名称
-git branch -M main
-
-# 推送到 GitHub（会提示输入用户名和密码）
-# 用户名：你的 GitHub 用户名
-# 密码：粘贴刚才复制的 Personal Access Token
-git push -u origin main
-\\\
-
-## 使用 PowerShell 自动化脚本
-
-如果你不想每次都手动输入 token，可以使用下面的自动化脚本。
-
-### 自动推送脚本 (push-to-github.ps1)
-
-\\\powershell
-# 配置信息（首次使用请修改）
-\ = "YOUR-USERNAME"  # 替换为你的 GitHub 用户名
-\ = "ghp_YOUR_TOKEN_HERE"  # 替换为你的 Personal Access Token
-\ = "hermes-seagull-profile"
-
-# 构建带 token 的 URL
-\ = "https://\@github.com/\/\.git"
-
-Write-Host "正在推送到 GitHub..." -ForegroundColor Cyan
-
-# 检查是否已初始化 git
-if (-not (Test-Path ".git")) {
-    Write-Host "[*] 初始化 Git 仓库..." -ForegroundColor Yellow
-    git init
-    git branch -M main
-}
-
-# 检查是否已配置 remote
-\ = git remote | Select-String -Pattern "origin" -Quiet
-if (-not \) {
-    Write-Host "[*] 添加远程仓库..." -ForegroundColor Yellow
-    git remote add origin \
-} else {
-    Write-Host "[*] 更新远程仓库 URL..." -ForegroundColor Yellow
-    git remote set-url origin \
-}
-
-# 添加所有文件
-Write-Host "[*] 添加文件..." -ForegroundColor Yellow
-git add .
-
-# 提交
-\ = Read-Host "输入提交信息 (留空使用默认信息)"
-if ([string]::IsNullOrWhiteSpace(\)) {
-    \ = "Update: \2026-09-11 23:12:52"
-}
-Write-Host "[*] 提交更改..." -ForegroundColor Yellow
-git commit -m "\"
-
-# 推送
-Write-Host "[*] 推送到 GitHub..." -ForegroundColor Yellow
-git push -u origin main
-
-if (\ -eq 0) {
-    Write-Host "[✓] 成功推送到 GitHub!" -ForegroundColor Green
-    Write-Host "仓库地址: https://github.com/\/\" -ForegroundColor Cyan
-} else {
-    Write-Host "[✗] 推送失败！" -ForegroundColor Red
-}
-\\\
-
-### 使用方法
-
-1. 创建 push-to-github.ps1 文件（已在下方生成）
-2. 编辑文件，替换 YOUR-USERNAME 和 ghp_YOUR_TOKEN_HERE
-3. 运行脚本：.\push-to-github.ps1
-
-## 安全提示
-
-⚠️ **重要安全提示：**
-
-1. **永远不要**将 Personal Access Token 提交到 Git 仓库中
-2. 将 push-to-github.ps1 添加到 .gitignore：
-   \\\
-   # 添加到 .gitignore
-   push-to-github.ps1
-   \\\
-3. Token 泄露后立即在 GitHub Settings 中撤销
-4. 定期更换 Token（建议每90天）
-5. 使用 GitHub Desktop 或 Git Credential Manager 更安全
-
-## 使用 GitHub Desktop (推荐给不熟悉命令行的用户)
-
-1. 下载安装 GitHub Desktop: https://desktop.github.com/
-2. 登录 GitHub 账号（自动处理 OAuth）
-3. File -> Add Local Repository -> 选择项目文件夹
-4. 左下角输入提交信息，点击 'Commit to main'
-5. 点击 'Publish repository' 或 'Push origin'
-
-## 更新项目
-
-每次修改后：
-
-\\\powershell
-git add .
-git commit -m "描述你的更改"
-git push
-\\\
-
-或者直接运行：.\push-to-github.ps1
-
-## 克隆/下载项目
-
-其他人可以通过以下方式获取：
-
-\\\ash
-# 克隆
-git clone https://github.com/YOUR-USERNAME/hermes-seagull-profile.git
-
-# 或者直接下载 ZIP
-# 访问仓库页面 -> Code -> Download ZIP
-\\\
-
-## 故障排查
-
-### 推送时提示 "Authentication failed"
-- 检查 token 是否正确
-- 检查 token 是否已过期
-- 确保 token 有 epo 权限
-
-### 推送时提示 "remote: Repository not found"
-- 检查仓库名称是否正确
-- 检查是否已创建仓库
-- 检查用户名是否正确
-
-### 推送时提示 "Updates were rejected"
-- 先拉取远程更改：git pull origin main
-- 解决冲突后再推送
-
-## 后续维护
-
-### 创建新版本 Release
-
-1. 进入 GitHub 仓库页面
-2. 点击 'Releases' -> 'Create a new release'
-3. 填写：
-   - Tag: v1.0.0
-   - Title: Seagull Profile v1.0.0
-   - Description: 描述此版本的主要功能
-4. 点击 'Publish release'
-
-### 更新 README
-
-在 GitHub 仓库页面会自动显示 README.md 内容，确保：
-- 项目描述清晰
-- 安装步骤完整
-- 包含使用示例
-- 添加许可证信息
+本仓库已有远端：<https://github.com/YeShenRenAnRan/hermes-seagull>（默认分支 `master`）。
 
 ---
 
-**下一步：运行 push-to-github.ps1 脚本将项目推送到 GitHub！**
+## 日常提交
+
+```bash
+git status
+git add -A
+git commit -m "描述改动"
+git push
+```
+
+已有本地克隆时不用重建 remote：
+
+```bash
+git remote -v
+# origin  https://github.com/YeShenRenAnRan/hermes-seagull.git (fetch)
+# origin  https://github.com/YeShenRenAnRan/hermes-seagull.git (push)
+```
+
+---
+
+## 推送认证
+
+### 方式一：HTTPS + Credential Manager（推荐）
+
+```bash
+git config --global credential.helper manager
+git push          # 弹出浏览器登录一次，之后自动记住
+```
+
+### 方式二：SSH
+
+```bash
+ssh-keygen -t ed25519 -C "your@email"
+# 把 ~/.ssh/id_ed25519.pub 内容贴到 https://github.com/settings/keys
+ssh -T git@github.com
+git remote set-url origin git@github.com:YeShenRenAnRan/hermes-seagull.git
+```
+
+> Windows 上如果 `ssh` 报 `UNPROTECTED PRIVATE KEY FILE` / `Bad permissions`，
+> 说明私钥权限太开放。在**当前用户**下收紧：
+>
+> ```powershell
+> icacls "$env:USERPROFILE\.ssh\id_ed25519" /inheritance:r
+> icacls "$env:USERPROFILE\.ssh\id_ed25519" /grant:r "$($env:USERNAME):(R)"
+> ```
+
+### 方式三：Personal Access Token
+
+1. <https://github.com/settings/tokens> → Generate new token (classic)
+2. 勾 `repo` 权限
+3. 推送时用户名填 GitHub 用户名，密码位置粘贴 token
+
+**永远不要把 token 写进文件提交上库**。GitHub 会直接吊销检测到的 token。
+
+---
+
+## 改完插件要做的自检
+
+```bash
+python tools/verify_plugin.py
+```
+
+会校验：
+
+- `plugin.yaml` 的字段和 `provides_hooks` 是否都是 Hermes 真实存在的 hook
+- `__init__.py` 语法、是否有 `register(ctx)`、注册的 hook 名是否合法
+- `skills/*/SKILL.md` 的 YAML frontmatter
+- 用本机 Hermes 的真实 loader 试加载：hook 数、技能数、注入字符数、问候语
+- 若 PATH 里有 `hermes`，再跑一次 `hermes plugins list`
+
+CI（`.github/workflows/sync-workflow.yml`）会在 Ubuntu + Windows × Python 3.11/3.13 上跑同一套检查。
+
+---
+
+## 发布新版本
+
+1. 改 `seagull-armor-break/plugin.yaml` 的 `version`
+2. 改 `distribution.yaml` 的 `version`（如果 profile 发行版也变了）
+3. 在 `README.md` 记录改动
+4. `git add -A && git commit -m "release: v1.1.0" && git push`
+5. 打标签：
+
+```bash
+git tag -a v1.1.0 -m "seagull-armor-break v1.1.0"
+git push origin v1.1.0
+```
+
+6. GitHub → Releases → Draft a new release → 选标签 → Publish
+
+---
+
+## 别人怎么装
+
+```bash
+# 插件
+hermes plugins install YeShenRenAnRan/hermes-seagull/seagull-armor-break --enable
+
+# profile（人格 + 磁盘上的技能）
+hermes profile install YeShenRenAnRan/hermes-seagull --name seagull --force
+```
+
+安装机制说明：
+
+- 插件安装走 `git clone --depth 1 <url>`，`owner/repo/subdir` 或
+  `https://github.com/owner/repo/tree/master/subdir` 都会被解析成"只取子目录"
+- profile 安装要求仓库根有 `distribution.yaml`
+
+---
+
+## 已知坑
+
+| 现象 | 原因 | 处理 |
+|---|---|---|
+| 装了插件但完全不生效 | 用了不存在的 hook 名 | 跑 `python tools/verify_plugin.py` |
+| 技能出现在索引里但是空的 | `SKILL.md` 缺 frontmatter | 补 `name` / `description` |
+| `hermes profile install` 报错 | 根目录缺 `distribution.yaml` | 本仓库已有 |
+| 推送 `origin main` 失败 | 本仓库默认分支是 `master` | 用 `master`，或先 `git branch -M main` 并改默认分支 |

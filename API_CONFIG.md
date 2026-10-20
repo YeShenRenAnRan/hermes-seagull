@@ -4,13 +4,16 @@
 
 **Windows:**
 ```
-C:\Users\你的用户名\AppData\Local\hermes\config.yaml
+%LOCALAPPDATA%\hermes\config.yaml
+例如 C:\Users\你的用户名\AppData\Local\hermes\config.yaml
 ```
 
 **Linux/Mac:**
 ```
-~/.config/hermes/config.yaml
+~/.hermes/config.yaml
 ```
+
+> 不确定路径就跑 `hermes config path`。这是 Hermes 自己报的权威答案。
 
 ---
 
@@ -19,11 +22,14 @@ C:\Users\你的用户名\AppData\Local\hermes\config.yaml
 ### 1️⃣ 打开配置文件
 
 ```bash
-# Windows
-notepad C:\Users\Administrator\AppData\Local\hermes\config.yaml
+# 推荐：用 Hermes 自带命令（跨平台）
+hermes config edit
 
+# 手动打开
+# Windows
+notepad "%LOCALAPPDATA%\hermes\config.yaml"
 # Linux/Mac
-nano ~/.config/hermes/config.yaml
+nano ~/.hermes/config.yaml
 ```
 
 ### 2️⃣ 修改 API 配置
@@ -112,13 +118,15 @@ model:
 
 | 字段 | 说明 | 示例 |
 |------|------|------|
-| \
-ame\ | 提供商名称（自定义） | \openai-official\ |
-| \ase_url\ | API 地址 | \https://api.openai.com/v1\ |
-| \pi_key\ | API 密钥 | \sk-xxx\ |
-| \pi_mode\ | API 模式 | \chat_completions\ |
-| \models\ | 可用模型列表 | 见上方示例 |
-| \model\ | 默认使用的模型 | \gpt-4o\ |
+| `name` | 提供商名称（自定义） | `openai-official` |
+| `base_url` | API 地址 | `https://api.openai.com/v1` |
+| `api_key` | API 密钥 | `sk-xxx` |
+| `api_mode` | API 模式 | `chat_completions` |
+| `models` | 可用模型列表 | 见上方示例 |
+| `model` | 默认使用的模型 | `gpt-4o` |
+
+> 更省事的做法：`hermes login`（交互式登录）或 `hermes model`（选 provider/模型），
+> 不用手改 YAML。
 
 ---
 
@@ -144,14 +152,16 @@ hermes chat
 ### Q1: 修改后不生效？
 **A:** 确保：
 1. 已保存文件
-2. 已退出并重新启动 \hermes chat\
+2. 已退出并重新启动 `hermes chat`
 3. YAML 格式正确（缩进用空格，不要用 Tab）
+4. 跑 `hermes config check` 看有没有报错
 
 ### Q2: API 调用失败？
 **A:** 检查：
-1. \pi_key\ 是否正确
-2. \ase_url\ 是否可访问（可用浏览器测试）
+1. `api_key` 是否正确
+2. `base_url` 是否可访问（可用浏览器测试）
 3. 模型名称是否正确
+4. `hermes status` 看当前 provider/模型
 
 ### Q3: 如何切换模型？
 **A:** 修改配置文件中的：
@@ -166,16 +176,22 @@ model:
 ## 📝 快速命令
 
 ```bash
-# 快速编辑配置（Windows）
-notepad %LOCALAPPDATA%\hermes\config.yaml
+# 快速编辑配置（跨平台）
+hermes config edit
 
-# 快速编辑配置（Linux/Mac）
-nano ~/.config/hermes/config.yaml
+# 看路径
+hermes config path
 
-# 查看当前配置
-cat ~/.config/hermes/config.yaml
+# 看当前配置
+hermes config show
+
+# Windows 手动
+notepad "%LOCALAPPDATA%\hermes\config.yaml"
+
+# Linux/Mac 手动
+nano ~/.hermes/config.yaml
 ```
 
 ---
 
-**🎉 配置完成后，发送"在吗"激活海鸥破甲模式！**
+**配置完成后，`hermes chat` 里发"在吗"验证海鸥是否在线。**

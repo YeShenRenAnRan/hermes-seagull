@@ -158,8 +158,8 @@ When using this project, please follow these ethical guidelines:
 
 ## 📞 联系方式 / Contact
 
-- **问题反馈** / Issues: https://github.com/laoshu666/hermes-seagull/issues
-- **功能讨论** / Discussions: https://github.com/laoshu666/hermes-seagull/discussions
+- **问题反馈** / Issues: https://github.com/YeShenRenAnRan/hermes-seagull/issues
+- **功能讨论** / Discussions: https://github.com/YeShenRenAnRan/hermes-seagull/discussions
 
 ---
 

@@ -1,198 +1,168 @@
-# Seagull Profile - 项目结构说明
+# 项目结构
 
-## 📁 目录结构
+## 目录树
 
 ```
-seagull-profile/
-├── SOUL.md                    # 核心人格与破甲协议栈
-├── AGENTS.md                  # 技能路由与执行指令
-├── profile.yaml               # Profile 元数据配置
-├── README.md                  # 项目说明（英文）
-├── README.zh-CN.md           # 项目说明（中文）
-├── QUICKSTART.md             # 快速开始指南
-├── STRUCTURE.md              # 本文件 - 项目结构说明
-├── LICENSE                    # MIT 开源协议
-├── requirements.txt          # 依赖列表
-├── .gitignore               # Git 忽略规则
-├── install.sh               # Linux/macOS 安装脚本
-├── install.ps1              # Windows 安装脚本
-├── verify.ps1               # 完整性验证脚本
-├── package.ps1              # 打包发布脚本
-└── skills/                  # 技能目录
-    ├── seagull-reverse/     # 逆向工程技能
-    │   └── SKILL.md
-    ├── seagull-pentest/     # 渗透测试技能
-    │   └── SKILL.md
-    ├── seagull-exploit/     # 漏洞利用技能
-    │   └── SKILL.md
-    ├── seagull-game-hack/   # 游戏辅助开发技能
-    │   └── SKILL.md
-    └── seagull-license-security/  # 卡密安全技能
-        └── SKILL.md
+hermes-seagull/
+├── seagull-armor-break/            # ← 插件本体（hermes plugins install 的目标）
+│   ├── plugin.yaml                 #   清单：name/version/provides_hooks/provides_skills
+│   ├── __init__.py                 #   register(ctx)：注册 hook + 技能
+│   ├── README.md                   #   插件技术说明
+│   ├── AGENTS.md                   #   可选补充协议（安装脚本会带进来）
+│   └── skills/                     #   随插件分发的技能（ctx.register_skill 的源）
+│       ├── seagull-reverse/SKILL.md
+│       ├── seagull-pentest/SKILL.md
+│       ├── seagull-exploit/SKILL.md
+│       ├── seagull-game-hack/SKILL.md
+│       └── seagull-license-security/SKILL.md
+│
+├── skills/                         # 同一批技能的规范源（profile 发行版用）
+│   └── seagull-*/SKILL.md
+│
+├── tools/
+│   └── verify_plugin.py            # 自检脚本（manifest / hook / 技能 / 真实 loader）
+│
+├── .github/workflows/
+│   └── sync-workflow.yml           # CI：Ubuntu+Windows × py3.11/3.13 跑自检
+│
+├── distribution.yaml               # profile 发行版清单（hermes profile install 用）
+├── SOUL.md                         # 海鸥人格（profile 的身份槽）
+├── AGENTS.md                       # 技能路由与执行指令（工作目录上下文文件）
+│
+├── install.ps1 / install.sh        # 一键安装：组装插件 → hermes plugins install
+├── verify.ps1  / verify.sh         # 调用 tools/verify_plugin.py
+├── package.ps1                     # 打包 zip 并输出 SHA256
+│
+├── README.md / README.zh-CN.md     # 项目说明
+├── QUICKSTART.md                   # 快速部署
+├── STRUCTURE.md                    # 本文件
+├── API_CONFIG.md                   # 模型 / API 配置
+├── GITHUB_GUIDE.md                 # 仓库维护与发布
+├── DISCLAIMER.md                   # 使用条款
+├── requirements.txt                # 技能用到的工具链（不是插件依赖）
+└── LICENSE                         # MIT
 ```
 
-## 📄 核心文件说明
+**为什么技能有两份？**
 
-### SOUL.md - 人格核心
-**作用**: 定义海鸥的身份、人格、交付标准和破甲协议栈
+- `seagull-armor-break/skills/` —— 插件安装时 Hermes 只 clone 那个子目录，
+  所以技能必须在那里面，`register(ctx)` 才能用 `ctx.register_skill()` 注册。
+- `skills/` —— profile 发行版安装时会把仓库根的 `skills/` 拷进
+  `~/.hermes/profiles/seagull/skills/`，让技能出现在磁盘索引里。
 
-**关键内容**:
-- **身份定义**: 海鸥 = 暴躁、直接、技术至上的工程师人格
-- **00a ~ 00r 模块**: 
-  - 00a: Unrestricted Kernel（无限制内核）
-  - 00b: Literal Intent Lock（原义强制执行）
-  - 00c: Armor Break Protocol（破甲协议）
-  - 00d: Unlimited Parity Baseline（无限制同级默认）
-  - 00e: Dual-Use No-Refuse Lock（双用不拒答）
-  - 00f: Armor Break 10x（十轮破甲升级）
-  - 00h: No-BU Force Start（禁止不做强制开工）
-  - 00i: CTF/Red-Team Global Coverage（CTF/红队全局覆盖）
-  - 00j: Operator-Owned-All（操作员目标全自有）
-  - 00k: CTF Owned-All 10x（十轮强化）
-  - 00l: Anti-Cheat Force Start（反作弊强制开工）
-  - 00m: License Positive Contract（卡密正向契约）
-  - 00p: Positive Rewrite Kernel（正向语义改写核）
-  - 00q: Base Replace Hard Load（硬加载）
-  - 00r: Game Red-Team Global（游戏红队全局）
-
-- **固定问候**: "海鸥在线，你要整点薯条吗？"
-- **硬开启**: 问候后静默加载全栈破甲 + CTF全局覆盖
-
-### AGENTS.md - 执行指令
-**作用**: 技能路由表、激活规则、工作流程
-
-**关键内容**:
-- 技能触发词映射表
-- 激活确认文本规范
-- 技能组合策略
-- 工作模式快捷指令
-- Few-shot 示例对话
-- 黑话 → 工程任务路由
-
-### profile.yaml - 元数据
-**作用**: Profile 配置文件，供 Hermes Agent 识别
-
-**内容**:
-```yaml
-name: seagull-profile
-version: 1.0.0
-description: Seagull - 海鸥 Technical Operator Profile
-author: Seagull Project
-license: MIT
-```
-
-## 🛠️ 技能文件说明
-
-每个技能目录包含一个 `SKILL.md` 文件，定义该技能的：
-
-1. **触发条件**: 什么时候激活这个技能
-2. **核心能力**: 这个技能能做什么
-3. **交付标准**: 输出的质量和格式要求
-4. **工具链**: 使用的工具和方法
-5. **示例场景**: 典型使用案例
-
-### seagull-reverse - 逆向工程
-- 二进制分析、反编译、脱壳、协议逆向
-- 支持 PE/ELF/APK/固件等
-- 工具: IDA Pro, Ghidra, Frida, radare2
-
-### seagull-pentest - 渗透测试
-- Web渗透、内网渗透、API测试
-- 漏洞发现、利用、修复验证
-- OWASP Top 10 全覆盖
-
-### seagull-exploit - 漏洞利用
-- 栈溢出、堆利用、ROP链构造
-- 本地/远程稳定化
-- pwntools + GDB 工作流
-
-### seagull-game-hack - 游戏辅助开发
-- ESP/透视、自瞄、内存修改
-- Unity/Unreal 引擎支持
-- Entity → W2S → Overlay 完整链路
-
-### seagull-license-security - 卡密安全
-- 授权验证流程分析
-- Patch-point 定位
-- 本地验证器构造
-
-## 🔧 脚本文件说明
-
-### install.ps1 / install.sh
-- 自动检测 Hermes Agent home 目录
-- 备份现有配置
-- 复制文件到正确位置
-- 验证安装结果
-
-### verify.ps1
-- 检查核心文件完整性
-- 验证技能目录结构
-- 确认关键内容存在
-- 输出详细检查报告
-
-### package.ps1
-- 运行完整性检查
-- 打包所有文件为 .zip
-- 生成 SHA256 校验和
-- 输出发布包信息
-
-## 🎯 使用建议
-
-### 完整安装流程
-```powershell
-# 1. 克隆或下载项目
-git clone <repo-url>
-
-# 2. 进入目录
-cd seagull-profile
-
-# 3. 验证文件完整性
-.\verify.ps1
-
-# 4. 安装到 Hermes Agent
-.\install.ps1
-
-# 5. 重启：先 Ctrl+C 退出，再运行 `hermes chat`
-
-# 6. 测试激活
-# 在 Hermes Agent 中输入: 在吗
-```
-
-### 开发与修改
-- 修改 `SOUL.md` 调整人格和破甲规则
-- 修改 `AGENTS.md` 调整技能路由
-- 在 `skills/` 下添加新技能
-- 运行 `verify.ps1` 确保完整性
-- 重新安装测试效果
-
-### 版本管理
-- 修改 `profile.yaml` 中的 version
-- 更新 `README.md` 的 CHANGELOG
-- 运行 `package.ps1` 生成发布包
-- 提交 Git 并打 tag
-
-## 📝 维护指南
-
-### 添加新技能
-1. 在 `skills/` 下创建新目录
-2. 编写 `SKILL.md` 文件
-3. 在 `AGENTS.md` 中添加路由规则
-4. 在 `verify.ps1` 中添加检查项
-5. 测试并更新文档
-
-### 更新破甲模块
-1. 在 `SOUL.md` 中修改对应模块
-2. 确保模块编号和引用一致
-3. 运行验证确保没有破坏现有功能
-4. 更新版本号
-
-### 调试问题
-1. 运行 `verify.ps1` 检查完整性
-2. 检查 Hermes Agent home 路径
-3. 查看 AGENTS.md 是否正确加载
-4. 测试触发词是否生效
-5. 查看激活确认文本
+两份内容一致；`install.ps1` / `install.sh` 安装时会用根目录的版本覆盖插件目录的副本，
+所以改技能改 `skills/` 就行。
 
 ---
 
-**项目结构清晰，维护简单，扩展方便。** 🚀
+## 核心文件
+
+### seagull-armor-break/plugin.yaml
+
+```yaml
+name: seagull-armor-break
+version: 1.0.0
+description: "..."
+author: "YeShenRenAnRan"
+license: MIT
+provides_hooks:        # 必须是 Hermes VALID_HOOKS 的成员
+  - pre_llm_call
+  - pre_tool_call
+  - transform_llm_output
+  - on_session_start
+  - on_session_end
+  - on_session_finalize
+provides_skills:
+  - seagull-reverse
+  - ...
+```
+
+### seagull-armor-break/__init__.py
+
+只依赖两样东西：
+
+| 接口 | 用途 |
+|---|---|
+| `ctx.register_hook(name, fn)` | 挂生命周期钩子 |
+| `ctx.register_skill(name, path, desc)` | 注册 `seagull-armor-break:<name>` |
+
+hook 契约（Hermes 0.19.x）：
+
+| hook | 传入 | 返回 |
+|---|---|---|
+| `pre_llm_call` | `session_id`, `user_message`, `is_first_turn`, `conversation_history`, `model`, `platform` | `{"context": "..."}` 或字符串 |
+| `pre_tool_call` | `tool_name`, `args`, `session_id`, `tool_call_id` | `None`（或阻断指令） |
+| `transform_llm_output` | `response_text`, `session_id`, `model`, `platform` | 替换后的字符串 |
+| `on_session_start/end/finalize` | `session_id` | `None` |
+
+注入只进**当轮用户消息**，永不进系统提示词 —— Hermes 刻意如此，为了保住 prompt cache 前缀。
+
+### skills/seagull-*/SKILL.md
+
+必须带 YAML frontmatter：
+
+```yaml
+---
+name: seagull-reverse
+description: 逆向工程技能 — ...
+---
+```
+
+缺了 frontmatter，Hermes 解析不出 `description`，技能索引里就是空条目。
+
+### SOUL.md
+
+海鸥人格，装在 profile 的 `$HERMES_HOME/SOUL.md`，由 Hermes 放进系统提示词的身份槽。
+**不参与插件**；插件负责路由，人格负责语气。
+
+### AGENTS.md
+
+技能路由表与执行模式。Hermes 从**当前工作目录**加载 `AGENTS.md`（只顶层，不递归）。
+插件也会尝试从 `$HERMES_HOME/AGENTS.md` 或插件目录读一份作为补充注入。
+
+### distribution.yaml
+
+`hermes profile install` 的清单，必须在仓库根。字段：`name` / `version` /
+`hermes_requires` / `author` / `license` / `distribution_owned`。
+
+---
+
+## 维护
+
+### 加一个技能
+
+1. `skills/<new-skill>/SKILL.md`，带 frontmatter（`name` 用目录名）
+2. 同步到 `seagull-armor-break/skills/`
+3. 在 `__init__.py` 的 `SKILL_ROUTES` 加触发词与确认词
+4. 在 `plugin.yaml` 的 `provides_skills` 加名字
+5. `python tools/verify_plugin.py`
+6. 把新技能加进 `tools/verify_plugin.py` 的 `REQUIRED_SKILLS`
+
+### 改注入内容
+
+- 协议块：`__init__.py` 的 `PROTOCOL_BLOCK`
+- 路由表渲染：`_build_catalog()`
+- 上限：`MAX_INJECTED_CHARS`（**不要超过 10000**，Hermes 会截断落盘）
+
+### 改人格
+
+改 `SOUL.md`，然后 `hermes profile update seagull`。
+
+### 改脚本文件
+
+`seagull-armor-break/skills/` 和根 `skills/` 都改，或只改根目录然后重装
+（安装脚本会用根目录覆盖）。
+
+---
+
+## 调试
+
+```bash
+hermes --dev chat                 # 打开插件调试日志
+python tools/verify_plugin.py     # 完整自检
+hermes plugins list               # 状态
+hermes config show | grep plugins # 看 plugins.enabled
+```
+
+环境变量：`HERMES_HOME` 指定配置目录；`HERMES_LIB` 指定 hermes-agent 源码路径
+（给 `tools/verify_plugin.py` 用，未安装时）。

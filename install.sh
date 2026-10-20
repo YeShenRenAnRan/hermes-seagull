@@ -1,114 +1,119 @@
-#!/bin/bash
-# 海鸥破甲智能体安装脚本 (Linux/macOS)
+#!/usr/bin/env bash
+# 海鸥破甲插件安装脚本 (Linux / macOS)
+#
+# 1. 组装完整插件目录（含 skills/ 与 AGENTS.md）
+# 2. 用 Hermes 官方命令安装并启用
+#
+# 不再往 config.yaml 写 active_profile / profiles.seagull / soul_file
+# 这些 Hermes 根本不存在的键。
 
-set -e
+set -euo pipefail
 
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PLUGIN_SRC="$REPO_ROOT/seagull-armor-break"
+NO_ENABLE=0
+
+for arg in "$@"; do
+  case "$arg" in
+    --no-enable) NO_ENABLE=1 ;;
+    -h|--help)
+      echo "用法: $0 [--no-enable]"
+      exit 0
+      ;;
+  esac
+done
+
+step() { printf '\033[36m[*] %s\033[0m\n' "$1"; }
+ok()   { printf '\033[32m[OK] %s\033[0m\n' "$1"; }
+warn() { printf '\033[33m[!] %s\033[0m\n' "$1"; }
+err()  { printf '\033[31m[X] %s\033[0m\n' "$1"; }
+
+echo
 echo "=========================================="
-echo "  海鸥破甲智能体 - 安装向导"
-echo "  Seagull Profile for Hermes Agent"
+echo "  海鸥破甲插件 - 安装"
 echo "=========================================="
-echo ""
+echo
 
-# 检查 Hermes 是否已安装
-if ! command -v hermes &> /dev/null; then
-    echo "[错误] Hermes Agent 未安装"
-    echo "请先安装 Hermes: pip install hermes-agent"
-    exit 1
+[ -d "$PLUGIN_SRC" ] || { err "找不到插件目录: $PLUGIN_SRC"; exit 1; }
+
+# --- 1. 组装 -------------------------------------------------------------
+step "组装插件目录..."
+STAGE="$(mktemp -d "${TMPDIR:-/tmp}/seagull-stage-XXXXXX")"
+STAGE_PLUGIN="$STAGE/seagull-armor-break"
+mkdir -p "$STAGE_PLUGIN"
+cp -R "$PLUGIN_SRC"/. "$STAGE_PLUGIN"/
+
+# 仓库根的 skills/ 是规范源
+if [ -d "$REPO_ROOT/skills" ]; then
+  rm -rf "$STAGE_PLUGIN/skills"
+  cp -R "$REPO_ROOT/skills" "$STAGE_PLUGIN/skills"
 fi
 
-echo "[✓] Hermes Agent 已安装"
-HERMES_VERSION=$(hermes --version 2>&1 || echo "unknown")
-echo "    版本: $HERMES_VERSION"
-echo ""
+[ -f "$REPO_ROOT/AGENTS.md" ] && cp "$REPO_ROOT/AGENTS.md" "$STAGE_PLUGIN/AGENTS.md"
+rm -rf "$STAGE_PLUGIN/__pycache__"
+ok "已组装: $STAGE_PLUGIN"
 
-# 确定 HERMES_HOME
-if [ -z "$HERMES_HOME" ]; then
-    HERMES_HOME="$HOME/.hermes"
-fi
+# --- 2. 校验技能 ---------------------------------------------------------
+step "校验 SKILL.md..."
+BAD=0
+for d in "$STAGE_PLUGIN"/skills/*/; do
+  [ -d "$d" ] || continue
+  name="$(basename "$d")"
+  md="$d/SKILL.md"
+  if [ ! -f "$md" ]; then
+    warn "$name: 缺 SKILL.md"; BAD=$((BAD+1)); continue
+  fi
+  if [ "$(head -c 3 "$md")" != "---" ]; then
+    warn "$name: SKILL.md 缺 YAML frontmatter（name/description）"; BAD=$((BAD+1))
+  else
+    ok "$name/SKILL.md"
+  fi
+done
+[ "$BAD" -gt 0 ] && warn "$BAD 个技能有问题，Hermes 仍可加载但索引不完整"
 
-echo "[*] Hermes 配置目录: $HERMES_HOME"
-echo ""
+# --- 3. 安装 -------------------------------------------------------------
+HERMES_BIN="$(command -v hermes || true)"
 
-# 创建目录结构
-echo "[*] 创建目录结构..."
-mkdir -p "$HERMES_HOME/profiles/seagull/skills"
-
-# 复制文件
-echo "[*] 复制 Profile 文件..."
-cp SOUL.md "$HERMES_HOME/profiles/seagull/"
-cp AGENTS.md "$HERMES_HOME/profiles/seagull/"
-cp profile.yaml "$HERMES_HOME/profiles/seagull/"
-
-echo "[*] 复制技能文件..."
-cp -r skills/* "$HERMES_HOME/profiles/seagull/skills/"
-
-echo "[✓] 文件复制完成"
-echo ""
-
-# 备份现有配置
-CONFIG_FILE="$HERMES_HOME/config.yaml"
-if [ -f "$CONFIG_FILE" ]; then
-    echo "[*] 备份现有配置..."
-    cp "$CONFIG_FILE" "$CONFIG_FILE.backup.$(date +%s)"
-    echo "[✓] 备份完成: $CONFIG_FILE.backup.*"
-fi
-
-# 更新配置文件
-echo "[*] 更新 Hermes 配置..."
-if [ -f "$CONFIG_FILE" ]; then
-    # 检查是否已有 seagull profile
-    if grep -q "active_profile: seagull" "$CONFIG_FILE"; then
-        echo "[✓] 配置已存在，跳过"
-    else
-        # 添加 seagull profile 配置
-        cat >> "$CONFIG_FILE" << 'EOF'
-
-# 海鸥破甲智能体 Profile
-active_profile: seagull
-profiles:
-  seagull:
-    soul_file: profiles/seagull/SOUL.md
-    agents_file: profiles/seagull/AGENTS.md
-    skills_dir: profiles/seagull/skills
-EOF
-        echo "[✓] 配置已更新"
-    fi
+if [ -z "$HERMES_BIN" ]; then
+  warn "没找到 hermes 命令，改为直接复制到插件目录"
+  HERMES_HOME_DIR="${HERMES_HOME:-$HOME/.hermes}"
+  DEST="$HERMES_HOME_DIR/plugins/seagull-armor-break"
+  rm -rf "$DEST"
+  mkdir -p "$(dirname "$DEST")"
+  cp -R "$STAGE_PLUGIN" "$DEST"
+  ok "已复制到: $DEST"
+  echo
+  warn "还需要启用：在 $HERMES_HOME_DIR/config.yaml 的 plugins.enabled 里加上 seagull-armor-break"
+  echo "或装好 Hermes 后运行：hermes plugins enable seagull-armor-break"
 else
-    # 创建新配置文件
-    cat > "$CONFIG_FILE" << 'EOF'
-# Hermes Agent 配置文件
-
-# 海鸥破甲智能体 Profile
-active_profile: seagull
-profiles:
-  seagull:
-    soul_file: profiles/seagull/SOUL.md
-    agents_file: profiles/seagull/AGENTS.md
-    skills_dir: profiles/seagull/skills
-EOF
-    echo "[✓] 配置文件已创建"
+  ok "hermes: $HERMES_BIN"
+  step "安装插件..."
+  # 本地目录走 file:// 形式，Hermes 会把它当 git 源 clone 到 ~/.hermes/plugins/
+  STAGE_URL="file://$(printf '%s' "$STAGE_PLUGIN" | sed 's| |%20|g')"
+  if [ "$NO_ENABLE" -eq 1 ]; then
+    "$HERMES_BIN" plugins install "$STAGE_URL" --no-enable
+  else
+    "$HERMES_BIN" plugins install "$STAGE_URL" --enable
+  fi
+  ok "插件已安装"
 fi
 
-echo ""
+rm -rf "$STAGE"
+
+# --- 4. 人格文件 ---------------------------------------------------------
+echo
+step "想要海鸥人格（SOUL.md）也生效，另外装 profile 发行版"
+echo "  hermes profile install YeShenRenAnRan/hermes-seagull --name seagull --force"
+echo "  hermes profile use seagull"
+echo "  说明：AGENTS.md 只从工作目录加载，把仓库里的 AGENTS.md 放到你常开工的目录即可。"
+
+echo
 echo "=========================================="
-echo "  ✨ 安装完成！"
+ok "安装完成"
 echo "=========================================="
-echo ""
-echo "下一步："
-echo "  1. 重启 Hermes: hermes bot restart"
-echo "  2. 进入交互: hermes chat"
-echo "  3. 发送 '在吗' 激活全局覆盖模式"
-echo ""
-echo "技能触发词："
-echo "  - 逆向 / reverse"
-echo "  - 渗透 / pentest"
-echo "  - 外挂 / esp / 自瞄"
-echo "  - 卡密 / 破解 / license"
-echo "  - pwn / exploit"
-echo "  - 更多请查看 README.md"
-echo ""
-echo "问题反馈："
-echo "  https://github.com/YOUR-USERNAME/hermes-seagull-profile/issues"
-echo ""
-echo "海鸥在线。把目标扔来，老子直接开干。"
-echo ""
+echo
+echo "验证："
+echo "  hermes plugins list          # seagull-armor-break 应为 enabled"
+echo "  hermes chat                  # 输入 '在吗'"
+echo "  预期: 海鸥在线，你要整点薯条吗？"
+echo

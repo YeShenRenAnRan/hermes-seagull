@@ -1,3 +1,8 @@
+---
+name: seagull-license-security
+description: 卡密与授权验证链技能 — 验证入口定位、签名/设备绑定数据流、patch-point 映射、本地 verifier 与激活响应 harness、试用状态图与迁移脚本。
+---
+
 # Seagull License Security Skill
 
 卡密/授权验证安全研究：验证流恢复、patch-point 映射、本地 harness、激活流客户端。

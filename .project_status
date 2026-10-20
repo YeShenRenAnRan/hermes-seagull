@@ -1,5 +1,10 @@
 # Project Status
 
-Last verified: 2026-09-12 00:51:54
-Status: ✅ All Codex references removed, disclaimer added
+Last verified: 2026-02-14
+Status: 已修复为 Hermes Agent 原生插件（0.19.x）
+- plugin.yaml + register(ctx) 使用真实 hook：pre_llm_call / pre_tool_call /
+  transform_llm_output / on_session_start / on_session_end / on_session_finalize
+- 5 个技能经 ctx.register_skill() 注册为 seagull-armor-break:<name>
+- 安装脚本改用 hermes plugins install，不再往 config.yaml 写假键
+- CI 换成真实自检（Ubuntu/Windows × py3.11/3.13）
 Author: laoshu666

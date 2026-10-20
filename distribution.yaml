@@ -1,0 +1,24 @@
+# Hermes Profile 发行版清单 —— 供 `hermes profile install` 使用
+#
+#   hermes profile install YeShenRenAnRan/hermes-seagull --name seagull --force
+#   hermes profile use seagull
+#
+# 装的是人格与技能（SOUL.md / skills/），装完是一个独立的 HERMES_HOME，
+# 不会碰你现有 profile 的 config.yaml / 会话 / 凭据。
+#
+# 插件（seagull-armor-break/）走另一条路：
+#   hermes plugins install YeShenRenAnRan/hermes-seagull/seagull-armor-break --enable
+
+name: seagull
+version: 1.0.0
+description: "海鸥人格 + 5 个专业技能包（逆向 / 渗透 / 漏洞利用 / 游戏安全 / 卡密验证链）"
+hermes_requires: ">=0.19.0"
+author: "YeShenRenAnRan"
+license: "MIT"
+
+distribution_owned:
+  - SOUL.md
+  - skills
+  - distribution.yaml
+  - README.md
+  - AGENTS.md

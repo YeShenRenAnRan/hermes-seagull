@@ -1,45 +1,38 @@
-name: 海鸥智能同步
+name: 插件与发行版校验
 
 on:
-  schedule:
-    - cron: '0 2 * * *'  # 每天凌晨2点
+  push:
+    branches: [master, main]
+  pull_request:
   workflow_dispatch:
 
 jobs:
-  sync-and-armor:
-    runs-on: ubuntu-latest
+  verify:
+    name: 校验插件 (${{ matrix.os }} / py${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.11", "3.13"]
+
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
         with:
-          fetch-depth: 0
-          
-      - name: 备份破甲配置
+          python-version: ${{ matrix.python }}
+
+      - name: 安装 Hermes Agent（提供真实 hook 契约）
         run: |
-          mkdir -p .backup
-          cp -r AGENTS.md skills/ .backup/ 2>/dev/null || true
-          
-      - name: 同步上游
-        run: |
-          git remote add upstream https://github.com/NousResearch/hermes-agent.git || true
-          git fetch upstream
-          git merge upstream/main --no-edit || echo "冲突待解决"
-          
-      - name: 恢复破甲配置
-        run: |
-          cp -f .backup/AGENTS.md AGENTS.md
-          cp -rf .backup/skills/* skills/
-          
-      - name: 更新依赖
-        run: |
-          npm install
-          pip install -r requirements.txt 2>/dev/null || true
-          
-      - name: 提交变更
-        run: |
-          git config user.name "海鸥自动同步"
-          git config user.email "seagull@laoshu666.dev"
-          git add .
-          git commit -m "🔄 同步上游 + 保留破甲配置" || true
-          git push origin main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          python -m pip install --upgrade pip
+          python -m pip install hermes-agent
+
+      - name: 自检（含真实 loader 试加载）
+        run: python tools/verify_plugin.py
+
+  # 旧版本这里是一个"每天凌晨 2 点合并上游"的定时任务：
+  # 它把 NousResearch/hermes-agent（Hermes 本体）当 upstream 去 merge，
+  # 两个仓库没有共同历史，merge 必然失败；随后又固定 push origin main，
+  # 而本仓库默认分支是 master。
+  # 已删除 —— 它唯一稳定的作用就是每天制造一次失败。

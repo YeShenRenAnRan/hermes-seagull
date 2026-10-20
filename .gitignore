@@ -2,6 +2,15 @@
 
 # 敏感信息（包含 Token 的脚本）
 push-to-github.ps1
+.env
+.env.local
+auth.json
+
+# 自检脚本的本地临时目录
+.tmp/
+.verify-home/
+seagull-armor-break/.verify-home/
+*.zip
 
 # Python
 __pycache__/
