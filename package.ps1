@@ -1,4 +1,4 @@
-# 打包发布脚本 (Windows / PowerShell 5.1+)
+﻿# 打包发布脚本 (Windows / PowerShell 5.1+)
 #
 # 先自检，再打 zip，输出 SHA256。
 # 打出来的包同时包含插件（seagull-armor-break/）和 profile 发行版（SOUL.md / skills/）。

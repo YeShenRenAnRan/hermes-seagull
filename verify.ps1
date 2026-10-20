@@ -1,4 +1,4 @@
-# 海鸥破甲插件自检 (Windows / PowerShell 5.1+)
+﻿# 海鸥破甲插件自检 (Windows / PowerShell 5.1+)
 #
 # 调用 tools/verify_plugin.py，校验 plugin.yaml、hook 名、技能 frontmatter，
 # 并在本机装了 hermes-agent 时用真实 loader 试加载一次。

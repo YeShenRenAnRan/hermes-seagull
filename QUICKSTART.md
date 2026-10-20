@@ -37,6 +37,75 @@ hermes plugins list
 hermes plugins enable seagull-armor-break
 ```
 
+### 连不上 GitHub 怎么办
+
+报 `Connection reset by peer` / `Failed to connect` / 卡在 `Cloning ...` ——
+是这台机器到 `github.com` 的链路不通，跟仓库无关。`hermes plugins install`
+只会去 clone GitHub，所以得绕开它。按下面顺序试：
+
+**① 有代理就直接给这条命令用**
+
+```bash
+export https_proxy=http://127.0.0.1:7890
+export http_proxy=http://127.0.0.1:7890
+hermes plugins install YeShenRenAnRan/hermes-seagull/seagull-armor-break --enable
+```
+
+（端口换成你自己的；socks5 用 `export all_proxy=socks5://127.0.0.1:1080`）
+
+**② 先找出一个能用的镜像，再从镜像 clone**
+
+```bash
+for m in https://ghfast.top/ https://ghproxy.net/ https://gh-proxy.com/ https://hub.gitmirror.com/ https://github.moeyy.xyz/; do
+  printf '%-32s ' "$m"
+  timeout 15 git ls-remote "${m}https://github.com/YeShenRenAnRan/hermes-seagull.git" HEAD >/dev/null 2>&1 \
+    && echo OK || echo FAIL
+done
+```
+
+挑一个打印 `OK` 的，把 `<MIRROR>` 换成它：
+
+```bash
+git clone --depth 1 <MIRROR>https://github.com/YeShenRenAnRan/hermes-seagull.git
+cd hermes-seagull
+bash install.sh --copy
+```
+
+`--copy` 是**完全离线**的安装方式：不调 git、不联网，直接把插件目录拷进
+`$HERMES_HOME/plugins/` 然后 `hermes plugins enable`。
+
+**③ 文件已经在机器上了（scp / 网盘 / U 盘）**
+
+```bash
+tar xzf hermes-seagull.tgz && cd hermes-seagull
+bash install.sh --copy
+```
+
+在能上网的机器上打包：
+
+```bash
+git clone --depth 1 https://github.com/YeShenRenAnRan/hermes-seagull.git
+tar czf hermes-seagull.tgz hermes-seagull
+scp hermes-seagull.tgz root@你的服务器:/root/
+```
+
+**④ 一条命令都不信，手动装**
+
+插件就是个目录，Hermes 只认两件事：
+
+```bash
+# 1. 目录放进插件目录
+mkdir -p ~/.hermes/plugins
+cp -R /path/to/hermes-seagull/seagull-armor-break ~/.hermes/plugins/
+
+# 2. 启用
+hermes plugins enable seagull-armor-break
+hermes plugins list | grep seagull     # 应显示 enabled
+```
+
+`install.sh` / `install.ps1` 的 `--copy` / `-Copy` 做的就是这两步，
+外加把仓库根的 `skills/` 同步进插件目录。
+
 ---
 
 ## 步骤 3：配置模型 / API
